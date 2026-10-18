@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Sky Dash Deluxe - Aprende Funciones de Excel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Fira+Code:wght@400;600&family=Rajdhani:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        .tech-font {
+            font-family: 'Rajdhani', sans-serif;
+        }
+        canvas {
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.7);
+            cursor: pointer;
+            touch-action: none;
+        }
+        .glow-emerald {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        .glow-amber {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-between p-2 md:p-4 overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+
+    <header class="w-full max-w-4xl flex flex-wrap justify-between items-center bg-slate-900/90 p-3 md:p-4 rounded-2xl border border-slate-800 shadow-xl backdrop-blur mb-2">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-br from-emerald-500 to-teal-700 p-2.5 rounded-xl text-white font-bold text-xl flex items-center justify-center shadow-lg glow-emerald">
+                <i class="fa-solid font-mono text-2xl">XLS</i>
+            </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 via-cyan-300 to-indigo-400 bg-clip-text text-transparent">
+                    Excel Sky Dash <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">DELUXE</span>
+                </h1>
+                <p class="text-xs text-slate-400">Esquiva errores y domina las fórmulas en 5 escenarios</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+            <!-- Vidas -->
+            <div class="flex items-center bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 mr-2 font-mono">VIDAS</span>
+                <div id="lives-container" class="flex space-x-1 text-red-500 text-sm md:text-base">
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+            </div>
+
+            <!-- Progreso del Nivel -->
+            <div class="flex items-center bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 mr-2 font-mono">ACIERTOS</span>
+                <span id="hits-text" class="font-bold text-emerald-400 text-sm md:text-base">0 / 3</span>
+            </div>
+
+            <!-- Combo -->
+            <div class="flex items-center bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 mr-1.5 font-mono">COMBO</span>
+                <span id="combo-text" class="font-bold text-cyan-400 text-sm md:text-base">x1</span>
+            </div>
+
+            <!-- Score Total -->
+            <div class="flex items-center bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                <span class="text-[10px] text-slate-400 mr-2 font-mono">SCORE</span>
+                <span id="score-text" class="font-bold text-amber-400 text-sm md:text-base">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-4xl flex-1 flex flex-col items-center justify-center relative">
+        
+        <!-- Canvas de Juego -->
+        <div class="relative w-full aspect-[4/3] max-h-[480px] flex justify-center items-center overflow-hidden rounded-2xl border-2 border-slate-800 shadow-2xl bg-slate-950">
+            <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+            <!-- Overlay de Inicio / Dificultad / Preguntas / Victoria -->
+            <div id="game-overlay" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col justify-center items-center p-6 text-center z-10 transition-all duration-300">
+                <div id="overlay-content" class="max-w-lg w-full">
+                    <i id="overlay-icon" class="fa-solid fa-plane-departure text-5xl text-emerald-400 mb-3 animate-bounce"></i>
+                    <h2 id="overlay-title" class="text-2xl md:text-3xl font-bold mb-2">¡Bienvenido Piloto de Excel!</h2>
+                    <p id="overlay-desc" class="text-slate-300 text-xs md:text-sm mb-4">
+                        Aprende y domina <strong>SI</strong>, <strong>CONTAR.SI</strong>, <strong>ORDENAR</strong> y <strong>FILTRAR</strong> navegando a través de 5 escenarios temáticos.
+                    </p>
+                    
+                    <!-- Seleccionar Dificultad -->
+                    <div id="difficulty-selector" class="mb-5 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                        <label class="block text-xs text-slate-400 uppercase font-mono mb-2">Selecciona la Dificultad:</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setDifficulty('easy')" id="diff-easy" class="diff-btn py-2 px-3 rounded-lg border text-xs font-bold transition border-emerald-500 bg-emerald-500/20 text-emerald-300">
+                                <i class="fa-solid fa-feather mr-1"></i> Fácil
+                            </button>
+                            <button type="button" onclick="setDifficulty('medium')" id="diff-medium" class="diff-btn py-2 px-3 rounded-lg border text-xs font-bold transition border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700">
+                                <i class="fa-solid fa-gauge-high mr-1"></i> Medio
+                            </button>
+                            <button type="button" onclick="setDifficulty('hard')" id="diff-hard" class="diff-btn py-2 px-3 rounded-lg border text-xs font-bold transition border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700">
+                                <i class="fa-solid fa-bolt mr-1"></i> Difícil
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Área de Preguntas Quiz (Oculto por defecto) -->
+                    <div id="quiz-container" class="hidden text-left bg-slate-900/90 p-4 rounded-xl border border-slate-700 mb-4 shadow-xl">
+                        <div class="flex justify-between items-center mb-2">
+                            <span id="quiz-level-tag" class="text-[10px] font-mono text-emerald-400 uppercase tracking-widest">NIVEL EVALUACIÓN</span>
+                            <span class="text-xs text-amber-400 font-bold"><i class="fa-solid fa-star mr-1"></i> +100 PTS</span>
+                        </div>
+                        <p id="quiz-question" class="font-semibold text-emerald-300 text-xs md:text-sm mb-3"></p>
+                        <div id="quiz-options" class="space-y-2"></div>
+                    </div>
+
+                    <button id="start-btn" onclick="startGame()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 text-base md:text-lg glow-emerald">
+                        <i class="fa-solid fa-play mr-2"></i> Iniciar Vuelo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner del Escenario / Nivel Actual -->
+            <div id="level-badge" class="absolute top-3 left-3 bg-slate-900/90 border border-slate-800 backdrop-blur px-3 py-1.5 rounded-xl flex items-center space-x-2 text-xs font-semibold z-0">
+                <span class="text-emerald-400 font-mono" id="level-num">ESCENARIO 1</span>
+                <span class="text-slate-600">|</span>
+                <span class="text-slate-300" id="level-topic">Planisferio Celeste: Función SI</span>
+            </div>
+
+            <!-- Ayuda Visual para Movimiento -->
+            <div id="touch-hint" class="absolute bottom-3 text-[11px] bg-slate-900/80 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30 pointer-events-none animate-pulse">
+                <i class="fa-solid fa-hand-pointer mr-1"></i> Toca, arrastra o usa flechas para mover la nave
+            </div>
+        </div>
+
+        <div id="excel-panel" class="w-full mt-3 bg-slate-900/90 border border-slate-800 rounded-xl p-3 md:p-4 shadow-xl hidden">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-emerald-400 flex items-center text-xs md:text-sm">
+                    <i class="fa-solid fa-graduation-cap mr-2 text-amber-400"></i>
+                    <span id="excel-panel-title">Aprende la Función SI</span>
+                </h3>
+                <span id="excel-panel-tag" class="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-700/60 font-mono">Objetivo: 3 Aciertos</span>
+            </div>
+
+            <div id="excel-challenge-content" class="text-xs text-slate-300">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Controles Móviles Visibles -->
+        <div class="w-full grid grid-cols-2 gap-3 mt-3 sm:hidden">
+            <button id="btn-left" class="bg-slate-900 active:bg-emerald-700 border border-slate-800 p-4 rounded-xl text-center text-2xl active:scale-95 transition">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <button id="btn-right" class="bg-slate-900 active:bg-emerald-700 border border-slate-800 p-4 rounded-xl text-center text-2xl active:scale-95 transition">
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </main>
+
+    <section class="w-full max-w-4xl mt-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 shadow-xl">
+        <div class="flex items-center justify-between mb-2">
+            <h4 class="font-bold text-emerald-400 flex items-center text-sm">
+                <i class="fa-solid fa-share-nodes mr-2"></i> ¿Cómo compartir este juego con tus amigos/alumnos?
+            </h4>
+            <button onclick="toggleShareInfo()" class="text-slate-400 hover:text-white transition">
+                <i id="share-chevron" class="fa-solid fa-chevron-down"></i>
+            </button>
+        </div>
+        
+        <div id="share-info-content" class="space-y-2 text-slate-300">
+            <p>
+                Este juego es un archivo web único e independiente (<strong>HTML</strong>). Para compartirlo mediante un enlace directo:
+            </p>
+            <ol class="list-decimal list-inside space-y-1 text-slate-400">
+                <li><strong class="text-slate-200">GitHub Pages (Gratis y Recomendado):</strong> Sube este archivo con nombre <code class="text-amber-300">index.html</code> a un repositorio público de GitHub y activa <em>GitHub Pages</em> en los ajustes. Obtendrás un link como <code class="text-emerald-400">https://tu-usuario.github.io/juego-excel</code>.</li>
+                <li><strong class="text-slate-200">Netlify / Vercel:</strong> Arrastra la carpeta que contiene este archivo en <a href="https://app.netlify.com/drop" target="_blank" class="text-cyan-400 underline">Netlify Drop</a> para obtener un enlace público instantáneo en menos de 10 segundos.</li>
+                <li><strong class="text-slate-200">Google Drive:</strong> Sube el archivo y utiliza un convertidor de alojamiento directo como <em>drv.tw</em> para generar una URL ejecutable.</li>
+            </ol>
+        </div>
+    </section>
+
+    <footer class="mt-3 text-center text-[11px] text-slate-500">
+        Usa flechas <kbd class="px-1 py-0.5 bg-slate-800 rounded text-slate-300">←</kbd> <kbd class="px-1 py-0.5 bg-slate-800 rounded text-slate-300">→</kbd> o arrastra la pantalla para maniobrar.
+    </footer>
+
+    <script>
+        // CONFIGURACIÓN DE ESCENARIOS Y DIFICULTADES
+        const SCENARIOS_DATA = [
+            {
+                level: 1,
+                name: "Planisferio Celeste",
+                topic: "Función SI",
+                bgGradient: ['#090d16', '#111827'],
+                starColor: '#38bdf8',
+                accentColor: '#10b981',
+                description: "Evalúa una condición lógica y devuelve un valor si es VERDADERO y otro si es FALSO.",
+                syntax: "=SI(prueba_lógica, valor_si_verdadero, [valor_si_falso])",
+                example: '=SI(A2>=70, "Aprobado", "Reprobado")',
+                explanation: "Si A2 es >= 70 escribe 'Aprobado', de lo contrario 'Reprobado'.",
+                obstacleText: ["A1>10", "#ERROR!", "FALSO", "SINTAXIS!"],
+                powerupText: ['=SI(A1>5,"OK","NO")', '=SI(B2="Sí",1,0)', '=SI(C1>=10, "PASA", "NO")'],
+                question: "¿Cuál es la estructura sintáctica correcta de la función SI?",
+                options: [
+                    "=SI(prueba_lógica, valor_si_verdadero, valor_si_falso)",
+                    "=SI(valor_falso, valor_verdadero, prueba)",
+                    "=SI(rango, criterio, suma)"
+                ],
+                correctAnswer: 0
+            },
+            {
+                level: 2,
+                name: "Matriz Cuántica Neón",
+                topic: "Función CONTAR.SI",
+                bgGradient: ['#0f051d', '#2e1065'],
+                starColor: '#a855f7',
+                accentColor: '#c084fc',
+                description: "Cuenta el número de celdas en un rango determinado que cumplen con un criterio dado.",
+                syntax: "=CONTAR.SI(rango, criterio)",
+                example: '=CONTAR.SI(A1:A10, ">50")',
+                explanation: "Cuenta cuántas celdas en el rango A1:A10 contienen números mayores a 50.",
+                obstacleText: ["#¡VALOR!", "CONTAR()", "TEXTO", "#N/D"],
+                powerupText: ['=CONTAR.SI(A:A,">10")', '=CONTAR.SI(B1:B20,"Aprobado")', '=CONTAR.SI(C:C, 100)'],
+                question: "¿Qué resultado obtienes con la fórmula =CONTAR.SI(A1:A5, '>10')?",
+                options: [
+                    "La suma de los números mayores a 10",
+                    "La cantidad exacta de celdas cuyo valor supera a 10",
+                    "El promedio general de los datos"
+                ],
+                correctAnswer: 1
+            },
+            {
+                level: 3,
+                name: "Océano Cyberpunk",
+                topic: "Función ORDENAR",
+                bgGradient: ['#022c22', '#064e3b'],
+                starColor: '#34d399',
+                accentColor: '#10b981',
+                description: "Ordena los elementos de un rango o matriz dinámicamente.",
+                syntax: "=ORDENAR(matriz, [orden_índice], [criterio_orden])",
+                example: '=ORDENAR(A2:C10, 1, 1)',
+                explanation: "Ordena la matriz A2:C10 tomando como referencia la columna 1 en orden ascendente (1).",
+                obstacleText: ["DESORDEN", "#REF!", "SIN_INDICE", "ERR_MATRIZ"],
+                powerupText: ['=ORDENAR(A1:B10,1,1)', '=ORDENAR(A1:A5)', '=ORDENAR(B2:D20,2,-1)'],
+                question: "¿Qué valor debes ingresar en 'criterio_orden' para ordenar de forma Descendente?",
+                options: [
+                    "El número -1",
+                    "La palabra 'DESC'",
+                    "El número 0"
+                ],
+                correctAnswer: 0
+            },
+            {
+                level: 4,
+                name: "Atardecer Synthwave",
+                topic: "Función FILTRAR",
+                bgGradient: ['#31121d', '#831843'],
+                starColor: '#f43f5e',
+                accentColor: '#fb7185',
+                description: "Filtra un rango de datos en función de los criterios que definas.",
+                syntax: "=FILTRAR(matriz, incluir, [si_vacio])",
+                example: '=FILTRAR(A2:B10, B2:B10="Ventas", "Sin datos")',
+                explanation: "Devuelve solo los registros donde el departamento sea 'Ventas'. Si no hay coincide, muestra 'Sin datos'.",
+                obstacleText: ["#CALC!", "SIN_CRITERIO", "#¡NUM!", "VACIO"],
+                powerupText: ['=FILTRAR(A1:B5,B1:B5>5)', '=FILTRAR(A:A,A:A<>"")', '=FILTRAR(A2:C10, C2:C10="OK")'],
+                question: "¿Cuál es la utilidad del argumento opcional [si_vacio] en FILTRAR?",
+                options: [
+                    "Borra los espacios en blanco del rango",
+                    "Muestra un mensaje personalizado si ninguna celda cumple el criterio",
+                    "Ordena automáticamente el resultado"
+                ],
+                correctAnswer: 1
+            },
+            {
+                level: 5,
+                name: "Cúpula Dorada del Certificado",
+                topic: "Desafío Final Integrado",
+                bgGradient: ['#1e1b4b', '#312e81'],
+                starColor: '#fbbf24',
+                accentColor: '#f59e0b',
+                description: "¡Demuestra tu dominio combinando fórmulas de Excel en tiempo real!",
+                syntax: "=SI(CONTAR.SI(...)>0, FILTRAR(...), ORDENAR(...))",
+                example: '=SI(CONTAR.SI(A:A, "Aprobado")>5, "Excelente", "Regular")',
+                explanation: "Anida varias funciones para automatizar la toma de decisiones y reportes complejos.",
+                obstacleText: ["#ERROR!", "#¡NUM!", "#REF!", "DESORDEN"],
+                powerupText: ['=SI(CONTAR.SI(A:A,">5")>0,"SI","NO")', '=ORDENAR(FILTRAR(A1:B10,B1:B10>0))', '=CONTAR.SI(A1:A10,"EXCEL")'],
+                question: "¿Cuál fórmula comprueba si hay más de 5 aprobados y categoriza el resultado?",
+                options: [
+                    "=SI(CONTAR.SI(A:A, 'Aprobado') > 5, 'Excelente', 'Regular')",
+                    "=SUMAR(A1:A10) + SI(5)",
+                    "=FILTRAR('Aprobado' > 5)"
+                ],
+                correctAnswer: 0
+            }
+        ];
+
+        const DIFFICULTY_SETTINGS = {
+            easy: { speedMultiplier: 0.25, spawnRate: 0.005, playerSpeed: 18, name: "Fácil" },
+            medium: { speedMultiplier: 0.55, spawnRate: 0.01, playerSpeed: 20, name: "Medio" },
+            hard: { speedMultiplier: 0.9, spawnRate: 0.018, playerSpeed: 24, name: "Difícil" }
+        };
+
+        // VARIABLES DE ESTADO Y JUEGO
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let selectedDifficulty = 'easy';
+        let currentLevelIndex = 0;
+        let score = 0;
+        let hitsInLevel = 0;
+        let correctAnswersCount = 0;
+        let lives = 3;
+        let combo = 1;
+        let gameActive = false;
+        let animationFrameId = null;
+
+        // Propiedades del Avión
+        const player = {
+            x: 0,
+            y: 0,
+            width: 48,
+            height: 48,
+            speed: 18
+        };
+
+        let obstacles = [];
+        let powerups = [];
+        let particles = [];
+        let stars = [];
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'collect') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'win') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(freq, now + idx * 0.1);
+                        g.gain.setValueAtTime(0.25, now + idx * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.3);
+                        o.start(now + idx * 0.1);
+                        o.stop(now + idx * 0.1 + 0.3);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio not allowed yet", e);
+            }
+        }
+
+        const keys = { left: false, right: false };
+
+        function setDifficulty(diff) {
+            selectedDifficulty = diff;
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.className = "diff-btn py-2 px-3 rounded-lg border text-xs font-bold transition border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700";
+            });
+            const activeBtn = document.getElementById(`diff-${diff}`);
+            if (activeBtn) {
+                activeBtn.className = "diff-btn py-2 px-3 rounded-lg border text-xs font-bold transition border-emerald-500 bg-emerald-500/20 text-emerald-300";
+            }
+        }
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            player.y = canvas.height - 65;
+            if (player.x === 0 || player.x > canvas.width) {
+                player.x = canvas.width / 2 - player.width / 2;
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 45; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 0.4 + 0.1
+                });
+            }
+        }
+
+        // Teclado
+        window.addEventListener('keydown', (e) => {
+            initAudio();
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        // Controles de puntero / táctiles directos
+        function handlePointerMove(clientX) {
+            const rect = canvas.getBoundingClientRect();
+            const relativeX = clientX - rect.left;
+            player.x = relativeX - player.width / 2;
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameActive) handlePointerMove(e.clientX);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (gameActive && e.touches.length > 0) handlePointerMove(e.touches[0].clientX);
+        }, { passive: true });
+
+        canvas.addEventListener('touchstart', (e) => {
+            initAudio();
+            if (gameActive && e.touches.length > 0) handlePointerMove(e.touches[0].clientX);
+        }, { passive: true });
+
+        // Botones Touch
+        const btnLeft = document.getElementById('btn-left');
+        const btnRight = document.getElementById('btn-right');
+
+        const startMoveLeft = (e) => { e.preventDefault(); initAudio(); keys.left = true; };
+        const stopMoveLeft = (e) => { e.preventDefault(); keys.left = false; };
+        const startMoveRight = (e) => { e.preventDefault(); initAudio(); keys.right = true; };
+        const stopMoveRight = (e) => { e.preventDefault(); keys.right = false; };
+
+        btnLeft.addEventListener('touchstart', startMoveLeft);
+        btnLeft.addEventListener('touchend', stopMoveLeft);
+        btnLeft.addEventListener('mousedown', startMoveLeft);
+        btnLeft.addEventListener('mouseup', stopMoveLeft);
+
+        btnRight.addEventListener('touchstart', startMoveRight);
+        btnRight.addEventListener('touchend', stopMoveRight);
+        btnRight.addEventListener('mousedown', startMoveRight);
+        btnRight.addEventListener('mouseup', stopMoveRight);
+
+        function toggleShareInfo() {
+            const content = document.getElementById('share-info-content');
+            const chevron = document.getElementById('share-chevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('fa-chevron-down');
+            chevron.classList.toggle('fa-chevron-up');
+        }
+
+        function startGame() {
+            initAudio();
+            resizeCanvas();
+            initStars();
+            
+            lives = 3;
+            score = 0;
+            combo = 1;
+            hitsInLevel = 0;
+            correctAnswersCount = 0;
+            currentLevelIndex = 0;
+            obstacles = [];
+            powerups = [];
+            particles = [];
+            
+            updateLivesUI();
+            updateHitsUI();
+            updateScoreUI();
+            loadLevelUI();
+
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('difficulty-selector').classList.add('hidden');
+            document.getElementById('game-overlay').classList.add('hidden');
+            document.getElementById('excel-panel').classList.remove('hidden');
+
+            gameActive = true;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        function triggerQuiz() {
+            gameActive = false;
+            playSound('win');
+            
+            const data = SCENARIOS_DATA[currentLevelIndex];
+            document.getElementById('overlay-icon').className = "fa-solid fa-graduation-cap text-5xl text-amber-400 mb-3 animate-bounce";
+            document.getElementById('overlay-title').innerText = `¡3 Aciertos! - Quiz Escenario ${data.level}`;
+            document.getElementById('overlay-desc').innerText = "Responde la pregunta práctica para habilitar el siguiente escenario:";
+            
+            const quizContainer = document.getElementById('quiz-container');
+            const quizQuestion = document.getElementById('quiz-question');
+            const quizOptions = document.getElementById('quiz-options');
+            
+            quizQuestion.innerText = data.question;
+            quizOptions.innerHTML = '';
+
+            data.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-emerald-700 text-slate-200 text-xs md:text-sm transition border border-slate-700 flex items-center justify-between";
+                btn.innerHTML = `<span>${idx + 1}. ${opt}</span> <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>`;
+                btn.onclick = () => checkAnswer(idx);
+                quizOptions.appendChild(btn);
+            });
+
+            quizContainer.classList.remove('hidden');
+            document.getElementById('start-btn').classList.add('hidden');
+            document.getElementById('game-overlay').classList.remove('hidden');
+        }
+
+        function checkAnswer(selectedIndex) {
+            const data = SCENARIOS_DATA[currentLevelIndex];
+            if (selectedIndex === data.correctAnswer) {
+                correctAnswersCount++;
+                score += 100 * combo;
+                combo++;
+                updateScoreUI();
+                
+                currentLevelIndex++;
+                if (currentLevelIndex >= SCENARIOS_DATA.length) {
+                    showFinalWin();
+                } else {
+                    hitsInLevel = 0;
+                    updateHitsUI();
+                    obstacles = [];
+                    powerups = [];
+                    loadLevelUI();
+
+                    document.getElementById('quiz-container').classList.add('hidden');
+                    document.getElementById('game-overlay').classList.add('hidden');
+                    
+                    gameActive = true;
+                    gameLoop();
+                }
+            } else {
+                playSound('hit');
+                combo = 1;
+                document.getElementById('combo-text').innerText = 'x1';
+                alert("Respuesta incorrecta. Volvamos al vuelo para seguir practicando.");
+                document.getElementById('quiz-container').classList.add('hidden');
+                document.getElementById('game-overlay').classList.add('hidden');
+                hitsInLevel = 0;
+                updateHitsUI();
+                gameActive = true;
+                gameLoop();
+            }
+        }
+
+        function loadLevelUI() {
+            const data = SCENARIOS_DATA[currentLevelIndex];
+            document.getElementById('level-num').innerText = `ESCENARIO ${data.level}`;
+            document.getElementById('level-topic').innerText = `${data.name}: ${data.topic}`;
+            
+            document.getElementById('excel-panel-title').innerText = `Concepto: ${data.topic}`;
+            document.getElementById('excel-challenge-content').innerHTML = `
+                <div class="mb-1.5">
+                    <span class="text-slate-400">Explicación:</span> ${data.description}
+                </div>
+                <div class="bg-slate-950 p-2 rounded-lg border border-slate-800 font-mono text-emerald-400 mb-1.5 text-[11px]">
+                    ${data.syntax}
+                </div>
+                <div class="text-[11px]">
+                    <strong>Ejemplo práctico:</strong> <code class="bg-slate-950 px-1.5 py-0.5 rounded text-amber-300 font-mono">${data.example}</code> 
+                    - <span class="text-slate-300">${data.explanation}</span>
+                </div>
+            `;
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            update();
+            render();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            const diffConfig = DIFFICULTY_SETTINGS[selectedDifficulty];
+            player.speed = diffConfig.playerSpeed;
+
+            // Movimiento
+            if (keys.left) player.x -= player.speed;
+            if (keys.right) player.x += player.speed;
+
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+
+            // Fondo de Estrellas
+            stars.forEach(star => {
+                star.y += star.speed;
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+            });
+
+            // Generación de Objetos según Escenario
+            const scenario = SCENARIOS_DATA[currentLevelIndex];
+
+            // Obstáculos
+            if (Math.random() < diffConfig.spawnRate) { 
+                const text = scenario.obstacleText[Math.floor(Math.random() * scenario.obstacleText.length)];
+                obstacles.push({
+                    x: Math.random() * (canvas.width - 85),
+                    y: -40,
+                    width: 85,
+                    height: 34,
+                    speed: (0.4 + Math.random() * 0.3) * diffConfig.speedMultiplier,
+                    text: text
+                });
+            }
+
+            // Powerups (Fórmulas)
+            if (Math.random() < diffConfig.spawnRate * 1.3) {
+                const text = scenario.powerupText[Math.floor(Math.random() * scenario.powerupText.length)];
+                powerups.push({
+                    x: Math.random() * (canvas.width - 145),
+                    y: -40,
+                    width: 145,
+                    height: 32,
+                    speed: (0.35 + Math.random() * 0.25) * diffConfig.speedMultiplier,
+                    text: text
+                });
+            }
+
+            // Mover y Colisionar Obstáculos
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.y += obs.speed;
+
+                if (checkCollision(player, obs)) {
+                    playSound('hit');
+                    createExplosion(obs.x + obs.width/2, obs.y + obs.height/2, '#ef4444');
+                    obstacles.splice(i, 1);
+                    takeDamage();
+                    continue;
+                }
+
+                if (obs.y > canvas.height) obstacles.splice(i, 1);
+            }
+
+            // Mover y Colisionar Powerups
+            for (let i = powerups.length - 1; i >= 0; i--) {
+                let pw = powerups[i];
+                pw.y += pw.speed;
+
+                if (checkCollision(player, pw)) {
+                    playSound('collect');
+                    createExplosion(pw.x + pw.width/2, pw.y + pw.height/2, scenario.accentColor);
+                    powerups.splice(i, 1);
+                    
+                    hitsInLevel++;
+                    score += 25 * combo;
+                    updateHitsUI();
+                    updateScoreUI();
+
+                    if (hitsInLevel >= 3) {
+                        triggerQuiz();
+                    }
+                    continue;
+                }
+
+                if (pw.y > canvas.height) powerups.splice(i, 1);
+            }
+
+            // Partículas
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.025;
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function checkCollision(r1, r2) {
+            return r1.x < r2.x + r2.width &&
+                   r1.x + r1.width > r2.x &&
+                   r1.y < r2.y + r2.height &&
+                   r1.y + r1.height > r2.y;
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    alpha: 1,
+                    color: color,
+                    size: Math.random() * 3 + 2
+                });
+            }
+        }
+
+        function takeDamage() {
+            lives--;
+            combo = 1;
+            document.getElementById('combo-text').innerText = 'x1';
+            updateLivesUI();
+            if (lives <= 0) gameOver();
+        }
+
+        function updateLivesUI() {
+            const container = document.getElementById('lives-container');
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < lives) {
+                    container.innerHTML += '<i class="fa-solid fa-heart text-red-500"></i>';
+                } else {
+                    container.innerHTML += '<i class="fa-regular fa-heart text-slate-700"></i>';
+                }
+            }
+        }
+
+        function updateHitsUI() {
+            document.getElementById('hits-text').innerText = `${hitsInLevel} / 3`;
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score-text').innerText = score;
+            document.getElementById('combo-text').innerText = `x${combo}`;
+        }
+
+        function render() {
+            const scenario = SCENARIOS_DATA[currentLevelIndex];
+
+            // Renderizar Fondo Gradiente del Escenario Actual
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            bgGrad.addColorStop(0, scenario.bgGradient[0]);
+            bgGrad.addColorStop(1, scenario.bgGradient[1]);
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Estrellas
+            ctx.fillStyle = scenario.starColor;
+            stars.forEach(star => {
+                ctx.globalAlpha = 0.5;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // Renderizar Nave del Jugador
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+            
+            // Cuerpo del Avión
+            ctx.fillStyle = "#38bdf8";
+            ctx.beginPath();
+            ctx.moveTo(0, -22);
+            ctx.lineTo(16, 18);
+            ctx.lineTo(0, 10);
+            ctx.lineTo(-16, 18);
+            ctx.closePath();
+            ctx.fill();
+
+            // Alas
+            ctx.fillStyle = scenario.accentColor;
+            ctx.beginPath();
+            ctx.moveTo(0, -4);
+            ctx.lineTo(24, 10);
+            ctx.lineTo(-24, 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // Fuego / Propulsor
+            ctx.fillStyle = "#f97316";
+            ctx.beginPath();
+            ctx.moveTo(-5, 12);
+            ctx.lineTo(0, 22 + Math.random() * 6);
+            ctx.lineTo(5, 12);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+
+            // Renderizar Obstáculos
+            obstacles.forEach(obs => {
+                ctx.fillStyle = "rgba(127, 29, 29, 0.9)";
+                ctx.strokeStyle = "#ef4444";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(obs.x, obs.y, obs.width, obs.height, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "#fca5a5";
+                ctx.font = "bold 10px Fira Code";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(obs.text, obs.x + obs.width / 2, obs.y + obs.height / 2);
+            });
+
+            // Renderizar Fórmulas (Powerups)
+            powerups.forEach(pw => {
+                ctx.fillStyle = "rgba(6, 78, 59, 0.9)";
+                ctx.strokeStyle = scenario.accentColor;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(pw.x, pw.y, pw.width, pw.height, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "#a7f3d0";
+                ctx.font = "bold 10px Fira Code";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(pw.text, pw.x + pw.width / 2, pw.y + pw.height / 2);
+            });
+
+            // Renderizar Partículas
+            particles.forEach(p => {
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function gameOver() {
+            playSound('hit');
+            gameActive = false;
+            document.getElementById('overlay-icon').className = "fa-solid fa-plane-slash text-5xl text-red-500 mb-3 animate-bounce";
+            document.getElementById('overlay-title').innerText = "¡Juego Terminado!";
+            document.getElementById('overlay-desc').innerHTML = `
+                <div class="bg-red-950/60 border border-red-800/60 p-3 rounded-xl mb-3 text-xs text-red-200">
+                    <p class="font-bold mb-1">Evaluación Parcial:</p>
+                    <p>Puntuación Final: <strong class="text-amber-400">${score} PTS</strong></p>
+                    <p>Escenarios Superados: <strong>${currentLevelIndex} / 5</strong></p>
+                </div>
+                Te has quedado sin vidas. ¡Vuelve a despegar para reforzar los conocimientos de Excel!
+            `;
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('difficulty-selector').classList.remove('hidden');
+            const btn = document.getElementById('start-btn');
+            btn.classList.remove('hidden');
+            btn.innerHTML = `<i class="fa-solid fa-rotate-right mr-2"></i> Reintentar Vuelo`;
+            btn.onclick = startGame;
+            document.getElementById('game-overlay').classList.remove('hidden');
+        }
+
+        function showFinalWin() {
+            playSound('win');
+            gameActive = false;
+            
+            // Determinar Calificación Rango
+            let rank = "A+";
+            if (correctAnswersCount === 5 && lives === 3) rank = "S (Perfecto)";
+            else if (correctAnswersCount >= 4) rank = "A (Sobresaliente)";
+            else rank = "B (Aprobado)";
+
+            document.getElementById('overlay-icon').className = "fa-solid fa-trophy text-6xl text-amber-400 mb-3 animate-bounce";
+            document.getElementById('overlay-title').innerHTML = "¡CAMPEÓN! LOGRASTE UN 10 PERFECTO 🏆";
+            document.getElementById('overlay-desc').innerHTML = `
+                <div class="bg-emerald-950/80 border border-emerald-500/50 p-4 rounded-xl text-emerald-200 mb-3 text-xs md:text-sm">
+                    <p class="font-bold text-base text-emerald-300 mb-1">¡Certificación Virtual de Excel Completa!</p>
+                    <p class="mb-2">Completaste exitosamente los <strong>5 escenarios temáticos</strong> y respondiste correctamente los quizes.</p>
+                    <div class="grid grid-cols-2 gap-2 bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-left font-mono">
+                        <div>Score Total: <span class="text-amber-400 font-bold">${score}</span></div>
+                        <div>Rango Obtención: <span class="text-cyan-400 font-bold">${rank}</span></div>
+                        <div>Dificultad: <span class="text-emerald-400 capitalize">${selectedDifficulty}</span></div>
+                        <div>Aciertos Quiz: <span class="text-emerald-400">${correctAnswersCount} / 5</span></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('difficulty-selector').classList.remove('hidden');
+            const btn = document.getElementById('start-btn');
+            btn.classList.remove('hidden');
+            btn.innerHTML = `<i class="fa-solid fa-medal mr-2"></i> Volver a Jugar`;
+            btn.onclick = startGame;
+            document.getElementById('game-overlay').classList.remove('hidden');
+        }
+
+        // Cargar Canvas inicial
+        resizeCanvas();
+    </script>
+</body>
+</html>
